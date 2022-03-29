@@ -46,9 +46,9 @@ def task2():
 
     # 2.
     #link for report: https://aakinshin.net/posts/kde-bw/
-    h1 = 0.05  # don't forget to set the 3 chosen values h1,h2,h3 in your code
-    h2 = 0.5
-    h3 = 1
+    h1 = 0.01  # don't forget to set the 3 chosen values h1,h2,h3 in your code
+    h2 = 0.1
+    h3 = 0.4
 
     N = sample_size * len(means)
     D = 2
