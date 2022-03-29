@@ -32,27 +32,16 @@ def task2():
     sample_size = 300
     y = []
     x = []
+    z = []
+    truth_count = 0
     for mean in means:
         x_train, y_train = np.random.multivariate_normal(mean, cov, sample_size).T
-
         x.extend(x_train)
         y.extend(y_train)
+        z.extend([truth_count]*sample_size)
+        truth_count += 1
 
     y = np.array([x,y]).T
-    """
-     if w is None:
-        w = x.new_ones(x.shape[0])
-    else:
-        w = x.shape[0] * w
-
-    d = x.data.size()[1] + 1
-    n_s = x_i.data.size()[0]
-
-    term_in_brackets = th.exp(-th.cdist(x, x_i) ** 2 / (2 * h ** 2))
-    sum = th.sum(w * term_in_brackets, dim=1)
-    fraction_term = 1 / (math.pow((2 * math.pi), (d / 2)) * n_s * math.pow(h, d))
-    
-    """
 
 
     # 2.
@@ -68,29 +57,43 @@ def task2():
         sum = 0
         f_kde = np.zeros_like(y)
         for n in range(0, N):
-            """y_n = y[n]
-            term_1 = (1 / np.power(np.sqrt(2 * np.pi) * h, D))
-            dist = np.array([np.linalg.norm(i - y_n) for i in y])
-            term_2 = np.exp(-dist ** 2 / (2 * h ** 2))
-            sum += term_1 * term_2"""
-            tmp = (y[n] - y) / h
-            kernel = np.exp(-0.5 * tmp ** 2) / (np.sqrt(2 * np.pi) * h)
+            tmp = (y - y[n]) / (2*h)
+            kernel = np.exp(-0.5 * tmp**2) / (np.sqrt(2 * np.pi) * h)
             f_kde[n] = kernel.sum() / (y.shape[0])
-        kde = f_kde
+            kde = f_kde
+        #kde = 1/N * sum
         kde_list.append(kde)
 
-    tmp_1, tmp_2 = zip(*y)
-    ax[0].scatter(tmp_1,tmp_2)
+    ax[0].scatter(y.T[0], y.T[1], s=50, c=z)
     for i in  range(0, len(kde_list)):
-        #ax[i+1].plot(y,kde_list[i])
-        tmp_1, tmp_2 = zip(*kde_list[i])
-        ax[i+1].hist2d(tmp_1, tmp_2)
+        kde = kde_list[i]
+        ax[i+1].scatter(y.T[0], y.T[1], s=50, c=kde.T[0])
 
 
-    x_test = [0,1.5]
+    #3.
+    x_test = [1.5, 0]
 
-    for n in range (0, N):
-        y_n = y[n]
+
+    #4.
+    sigma = 1
+    argument_1 = 1 / (((2 * np.pi * sigma**2))**(D/2))
+    argument_2 = np.exp(-1/(2 * sigma**2) * (y - x_test)**2)
+    p_x_y_array = argument_1 * argument_2
+
+    #4.: (8.)
+    p_y = kde
+    p_x_y = p_x_y_array
+    nominator = np.sum(y*p_y * p_x_y)
+    denomintor = np.sum(p_y * p_x_y)
+    x_noise = nominator/denomintor
+    for i in  range(0, len(kde_list)):
+        ax[i+1].scatter(x_test[0], x_test[1], c=x_noise)
+    plt.show()
+
+    #5.
+    y_max = np.unravel_index(y.argmax(), y.shape)
+    y_map = p_y[y_max[0]][y_max[1]] * p_x_y[y_max[0]][y_max[1]]
+    print(y_map)
 
 
     """ End of your code
