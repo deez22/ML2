@@ -43,57 +43,68 @@ def task2():
 
     y = np.array([x,y]).T
 
-
     # 2.
     #link for report: https://aakinshin.net/posts/kde-bw/
     h1 = 0.01  # don't forget to set the 3 chosen values h1,h2,h3 in your code
     h2 = 0.1
     h3 = 0.4
-
     N = sample_size * len(means)
     D = 2
     kde_list = []
-    for h in [h1,h2,h3]:
-        sum = 0
-        f_kde = np.zeros_like(y)
-        for n in range(0, N):
-            tmp = (y - y[n]) / (2*h)
-            kernel = np.exp(-0.5 * tmp**2) / (np.sqrt(2 * np.pi) * h)
-            f_kde[n] = kernel.sum() / (y.shape[0])
-            kde = f_kde
-        #kde = 1/N * sum
-        kde_list.append(kde)
 
-    ax[0].scatter(y.T[0], y.T[1], s=50, c=z)
-    for i in  range(0, len(kde_list)):
-        kde = kde_list[i]
-        ax[i+1].scatter(y.T[0], y.T[1], s=50, c=kde.T[0])
+    def kde():
+        for h in [h1,h2,h3]:
+            f_kde = np.zeros_like(y)
+            for n in range(0, N):
+                tmp = (y - y[n]) / (2*h)
+                kernel = np.exp(-0.5 * tmp**2) / (np.sqrt(2 * np.pi) * h)
+                f_kde[n] = kernel.sum() / (y.shape[0])
+                kde = f_kde
+            #kde = 1/N * sum
+            kde_list.append(kde)
 
+        ax[0].scatter(y.T[0], y.T[1], s=50, c=z)
+        for i in  range(0, len(kde_list)):
+            kde = kde_list[i]
+            ax[i+1].scatter(y.T[0], y.T[1], s=50, c=kde.T[0])
+
+        return kde_list
 
     #3.
     x_test = [1.5, 0]
 
-
     #4.
-    sigma = 1
-    argument_1 = 1 / (((2 * np.pi * sigma**2))**(D/2))
-    argument_2 = np.exp(-1/(2 * sigma**2) * (y - x_test)**2)
-    p_x_y_array = argument_1 * argument_2
+    def cmm(sigma, x_test, kde):
+        argument_1 = 1 / (((2 * np.pi * sigma**2))**(D/2))
+        argument_2 = np.exp(-1/(2 * sigma**2) * (y - x_test)**2)
+        p_x_y_array = argument_1 * argument_2
 
-    #4.: (8.)
-    p_y = kde
-    p_x_y = p_x_y_array
-    nominator = np.sum(y*p_y * p_x_y)
-    denomintor = np.sum(p_y * p_x_y)
-    x_noise = nominator/denomintor
-    for i in  range(0, len(kde_list)):
-        ax[i+1].scatter(x_test[0], x_test[1], c=x_noise)
-    plt.show()
+        #4.: (8.)
+        p_y = kde
+        p_x_y = p_x_y_array
+        nominator = np.sum(y*p_y * p_x_y)
+        denomintor = np.sum(p_y * p_x_y)
+        conditional_mean = nominator/denomintor
+        for i in  range(0, len(kde_list)):
+            ax[i+1].scatter(x_test[0], x_test[1], c=conditional_mean)
+        plt.show()
+        return p_y, p_x_y, conditional_mean
 
     #5.
-    y_max = np.unravel_index(y.argmax(), y.shape)
-    y_map = p_y[y_max[0]][y_max[1]] * p_x_y[y_max[0]][y_max[1]]
-    print(y_map)
+    def map(p_y, p_x_y):
+        y_max = np.unravel_index(y.argmax(), y.shape)
+        y_map = p_y[y_max[0]][y_max[1]] * p_x_y[y_max[0]][y_max[1]]
+        print(y_map)
+        return y_map
+
+    #6
+    kde_list = kde()
+    p_y, p_x_y, conditional_mean = cmm(sigma=1, x_test=x_test, kde=kde_list[0])
+    map = map(p_y, p_x_y)
+    print("Conditional mean = " + str(conditional_mean))
+    print("MAP = " + str(map))
+
+    #7
 
 
     """ End of your code
