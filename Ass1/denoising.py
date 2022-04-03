@@ -83,8 +83,8 @@ def task2():
         p_y = kde
         p_x_y = p_x_y_array
         nominator = np.sum(y*p_y * p_x_y)
-        denomintor = np.sum(p_y * p_x_y)
-        conditional_mean = nominator/denomintor
+        denominator = np.sum(p_y * p_x_y)
+        conditional_mean = nominator/denominator
         for i in  range(0, len(kde_list)):
             ax[i+1].scatter(x_test[0], x_test[1], c=conditional_mean)
         plt.show()
@@ -144,12 +144,42 @@ def task3():
     """ Start of your code
     """
 
+    #4
+    M = 25
+    N = 1000
+
+    dataset = np.load('bloodmnist.npz')
+    dataset_images = dataset['train_images']
+    dataset_labels = dataset['train_labels']
+
+    random_numbers_train = np.random.randint(0, len(dataset_images), N)
+    random_numbers_test = np.random.randint(0, len(dataset_images), M)
+    y_train = []
+    x_test = []
+
+    for i in range(0,1000):
+        y_train.append(dataset_images[i])
+    for i in range(0,25):
+        x_test.append(dataset_images[i])
+
+    #5
+    mean = 0
+    x_test_noise = []
+    for test_image in x_test:
+        sigma = np.random.uniform(0.1, 1)
+        test_image_flat = test_image.flatten()
+        gaussian_noise = np.random.normal(mean, sigma, test_image_flat.shape)
+        test_image_flat_noise = test_image_flat + gaussian_noise
+        x_test_noise.append(test_image_flat_noise.reshape(test_image.shape[0], test_image.shape[1], test_image.shape[2]))
+
+    print("hello")
     """ End of your code
     """
     return fig
 
 if __name__ == '__main__':
-    tasks = [task2, task3]
+    #tasks = [task2, task3]
+    tasks = [task3]
 
     pdf = PdfPages('figures.pdf')
     for task in tasks:
