@@ -147,7 +147,9 @@ def task12():
     axis_iterator = 0
     for lamb in lams:
         avg_train_loss = []
+        std_train_loss = []
         avg_test_loss = []
+        std_test_loss = []
         for M in M_7:
             train_loss_array = []
             test_loss_array = []
@@ -156,12 +158,17 @@ def task12():
                 train_loss_array.append(train_loss)
                 test_loss_array.append(test_loss)
             avg_train_loss.append(np.average(train_loss_array))
+            std_train_loss.append(np.std(train_loss_array))
             avg_test_loss.append(np.average(test_loss_array))
+            std_test_loss.append(np.std(test_loss_array))
 
         print("Average train loss = " + str(avg_train_loss))
         print("Average test loss = " + str(avg_test_loss))
         ax1[axis_iterator].plot(avg_train_loss)
+        #ax1[axis_iterator].fill_between(range(0,60), np.array(avg_train_loss) - np.array(std_train_loss)
+        #                                , np.array(avg_train_loss) + np.array(std_train_loss), alpha=0.2)
         ax1[axis_iterator].plot(avg_test_loss)
+
         axis_iterator += 1
 
     plt.show()
