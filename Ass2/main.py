@@ -33,7 +33,7 @@ def task12():
     fig1, ax1 = plt.subplots(1, 3, figsize=(17, 5))
     plt.suptitle('Task 1 - Regularized Least Squares and Double Descent Phenomenon', fontsize=16)
     for a in ax1.reshape(-1):
-        a.set_ylim([0, 40])
+        a.set_ylim([0, 400])
         a.set_ylabel('error')
         a.set_xlabel('number of random features')
 
@@ -98,7 +98,7 @@ def task12():
         z = Q.T @ b
         return np.linalg.solve(R, z)
 
-    def calc_w(y, l, phi):
+    def calc_w(y, l, phi, M):
         I = np.identity(M)
         w_star_first = np.dot(phi.T, phi) + l * I
         w_star_second = phi.T @ y  # np.dot(phi.T, y)
@@ -128,40 +128,43 @@ def task12():
         y_test = generate_y(x_test, sigma=sigma)
         return x_train.T, y_train, x_test.T, y_test
 
-    def calc_train_and_test_mse(x_train, y_train, x_test, y_test, M):
+    def calc_train_and_test_mse(x_train, y_train, x_test, y_test, M, lamb):
         # %%
         v = generate_v(M, d)
         phi = calc_phi(x_train, v, M)
         phi_test = calc_phi(x_test, v, M)
-        w_star = calc_w(y=y_train, l=1e-8, phi=phi)
+        w_star = calc_w(y=y_train, l=lamb, phi=phi, M=M)
         mse_train = mse(N_train, y_train, predict(phi, w_star))
         mse_test = mse(N_test, y_test, predict(phi_test, w_star))
         return mse_train, mse_test
 
     M_7 =  [10 * k + 1 for k in range(0, 60)]
 
-    avg_train_loss = []
-    avg_test_loss = []
+
 
     x_train, y_train, x_test, y_test = train_test_data(N_train, N_test, d, sigma)
 
-    for M in M_7:
-        train_loss_array = []
-        test_loss_array = []
-        for i in range(0, 5):
-            train_loss, test_loss = calc_train_and_test_mse(x_train, y_train, x_test, y_test, M)
-            train_loss_array.append(train_loss)
-            test_loss_array.append(test_loss)
-        avg_train_loss.append(np.average(train_loss_array))
-        avg_test_loss.append(np.average(test_loss_array))
+    axis_iterator = 0
+    for lamb in lams:
+        avg_train_loss = []
+        avg_test_loss = []
+        for M in M_7:
+            train_loss_array = []
+            test_loss_array = []
+            for i in range(0, 5):
+                train_loss, test_loss = calc_train_and_test_mse(x_train, y_train, x_test, y_test, M, lamb)
+                train_loss_array.append(train_loss)
+                test_loss_array.append(test_loss)
+            avg_train_loss.append(np.average(train_loss_array))
+            avg_test_loss.append(np.average(test_loss_array))
 
-    print("Average train loss = " + str(avg_train_loss))
-    print("Average test loss = " + str(avg_test_loss))
+        print("Average train loss = " + str(avg_train_loss))
+        print("Average test loss = " + str(avg_test_loss))
+        ax1[axis_iterator].plot(avg_train_loss)
+        ax1[axis_iterator].plot(avg_test_loss)
+        axis_iterator += 1
 
-    plt.plot(avg_train_loss)
-    plt.plot(avg_test_loss)
     plt.show()
-
     print("hi")
 
 
