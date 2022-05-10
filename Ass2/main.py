@@ -165,10 +165,12 @@ def task12():
         print("Average train loss = " + str(avg_train_loss))
         print("Average test loss = " + str(avg_test_loss))
         ax1[axis_iterator].plot(avg_train_loss)
-        #ax1[axis_iterator].fill_between(range(0,60), np.array(avg_train_loss) - np.array(std_train_loss)
-        #                                , np.array(avg_train_loss) + np.array(std_train_loss), alpha=0.2)
-        ax1[axis_iterator].plot(avg_test_loss)
+        ax1[axis_iterator].fill_between(np.linspace(0,59,60), np.array(avg_train_loss) - np.array(std_train_loss)
+                                        , np.array(avg_train_loss) + np.array(std_train_loss),alpha=0.2)
 
+        ax1[axis_iterator].plot(avg_test_loss)
+        ax1[axis_iterator].fill_between(np.linspace(0,59,60), np.array(avg_test_loss) - np.array(std_test_loss)
+                                        , np.array(avg_test_loss) + np.array(std_test_loss),alpha=0.2)
         axis_iterator += 1
 
     plt.show()
