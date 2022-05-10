@@ -48,6 +48,15 @@ def task12():
     """
 
     # %%
+    N_train = 200
+    N_test = 50
+    # dim = 2
+    d = 5
+    sigma = 2
+    M = 50
+    r = 5
+
+    # %%
 
     # generate random x samples
     def generate_x(N, d):
@@ -57,15 +66,11 @@ def task12():
         radius = np.sqrt((normal_deviates ** 2).sum(axis=0))
         x = normal_deviates / radius
 
-        #fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-        #ax.scatter(*x)
-        #ax.set_aspect('auto')
-        #plt.show()
         return x
 
     # %%
 
-    # calculate y
+    # generate random y samples
     def generate_y(x, sigma):
         ones_array = np.ones(d)
         y = []
@@ -82,15 +87,21 @@ def task12():
         return vec
 
     def generate_phi(x, v, M):
-        phi = []
-        for x_n in x.T:
-            lol = []
-            for v_m in v.T:
-                lol.append(v_m.T*x_n)
+        print("fun")
+        x = x.T
+        n_samples, _ = x.shape
 
-            phi.append(1 / np.sqrt(M) * (np.max(lol, 0)))
+        rand_features = np.random.normal(size=[n_samples, d, 5])
+        rand_features = rand_features / np.linalg.norm(rand_features, axis=-1)[:, :, None]
 
-        return np.array(phi)
+        projected = np.squeeze(rand_features @ x[:, :, None], axis=-1)
+        projected = (1 / np.sqrt(d)) * np.maximum(projected, 0, projected)
+        return projected
+
+        """term_1 = v * x
+        #term_squeezerd = np.squeeze(term_1, axis=0)
+        projected = (1 / np.sqrt(M)) * np.maximum(term_1, 0, term_1)
+        return projected"""
 
     def qr_inv(A, b):
         Q, R = np.linalg.qr(A)
@@ -98,64 +109,56 @@ def task12():
         return np.linalg.solve(R, z)
 
     def calc_w(y, l, phi):
-        I = np.identity(len(phi[0]))
+        I = np.identity(d)
         w_star_first = np.dot(phi.T, phi) + l * I
-        w_star_second = np.dot(phi.T, y)
+        w_star_second = phi.T @ y  # np.dot(phi.T, y)
         w_star = qr_inv(w_star_first, w_star_second)
 
         return w_star
 
     def predict(x, w):
-        y_hat = np.dot(x.T, w)
+        y_hat = x.T @ w
         return y_hat
 
     def mse(N, y, y_hat):
-        for n in range(0,N):
-            sum = np.power(y[n] - y_hat[n], 2)
+        sum = 0
+        for n in range(0, N):
+            sum += np.power(y[n] - y_hat[n], 2)
 
-        mse = sum/N
+        mse = sum / N
         return mse
+
     # %%
 
-    def calc_result(N_train, N_test, d, sigma, M):
+    def train_test_data(N_train, N_test, d, sigma):
         x_train = generate_x(N_train, d=d)
         y_train = generate_y(x_train, sigma=sigma)
 
         x_test = generate_x(N_test, d=d)
         y_test = generate_y(x_test, sigma=sigma)
+        return x_train, y_train, x_test, y_test
 
+    def calc_train_and_test_mse(x_train, y_train, x_test, y_test, M):
         # %%
-
         v = generate_v(M, d)
-
         phi = generate_phi(x_train, v, M)
-
         w_star = calc_w(y=y_train, l=1e-8, phi=phi)
-
         mse_train = mse(N_train, y_train, predict(x_train, w_star))
         mse_test = mse(N_test, y_test, predict(x_test, w_star))
-
         return mse_train, mse_test
 
-
-    N_train = 200
-    N_test = 50
-    # dim = 2
-    d = 5
-    sigma = 2
-    M = 50
-    r = 5
-
-    M_7 = [10 * 0 + 1, 10 * 7 + 1, 10 * 25 + 1, 10 * 37 + 1, 10 * 60 + 1]
+    M_7 = [10 * k + 1 for k in range(0, 60)]
 
     avg_train_loss = []
     avg_test_loss = []
 
+    x_train, y_train, x_test, y_test = train_test_data(N_train, N_test, d, sigma)
+
     for M in M_7:
         train_loss_array = []
         test_loss_array = []
-        for i in range (0, 5):
-            train_loss, test_loss = calc_result(N_train, N_test, d, sigma, M)
+        for i in range(0, 5):
+            train_loss, test_loss = calc_train_and_test_mse(x_train, y_train, x_test, y_test, M)
             train_loss_array.append(train_loss)
             test_loss_array.append(test_loss)
         avg_train_loss.append(np.average(train_loss_array))
@@ -164,7 +167,11 @@ def task12():
     print("Average train loss = " + str(avg_train_loss))
     print("Average test loss = " + str(avg_test_loss))
 
-    print ("hi")
+    plt.plot(avg_train_loss)
+    plt.plot(avg_test_loss)
+    plt.show()
+
+    print("hi")
 
 
     """ End of your code
