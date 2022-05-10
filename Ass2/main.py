@@ -75,8 +75,8 @@ def task12():
         ones_array = np.ones(d)
         y = []
         for x_n in x.T:
-            y_first = np.power(0.25 + np.power((ones_array.T * x_n), 2), -1)
-            y_second = np.random.normal(0, np.power(sigma, 2), len(x_n))
+            y_first = np.power(0.25 + np.power((ones_array.T @ x_n), 2), -1)
+            y_second = np.random.normal(0, np.power(sigma, 2), 1)
             y.append(y_first + y_second)
 
         return np.array(y)
@@ -86,22 +86,12 @@ def task12():
         vec /= np.linalg.norm(vec, axis=0)
         return vec
 
-    def generate_phi(x, v, M):
-        print("fun")
-        x = x.T
-        n_samples, _ = x.shape
+    def calc_phi(x, v, M):
+        term_1 = v.T @ x.T
+        projected = (1 / np.sqrt(M)) * np.maximum(term_1, 0, term_1).T
 
-        rand_features = np.random.normal(size=[n_samples, d, 5])
-        rand_features = rand_features / np.linalg.norm(rand_features, axis=-1)[:, :, None]
-
-        projected = np.squeeze(rand_features @ x[:, :, None], axis=-1)
-        projected = (1 / np.sqrt(d)) * np.maximum(projected, 0, projected)
+        assert((projected.shape[0] == N_train or projected.shape[0] == N_test)  and projected.shape[1] == M)
         return projected
-
-        """term_1 = v * x
-        #term_squeezerd = np.squeeze(term_1, axis=0)
-        projected = (1 / np.sqrt(M)) * np.maximum(term_1, 0, term_1)
-        return projected"""
 
     def qr_inv(A, b):
         Q, R = np.linalg.qr(A)
@@ -109,7 +99,7 @@ def task12():
         return np.linalg.solve(R, z)
 
     def calc_w(y, l, phi):
-        I = np.identity(d)
+        I = np.identity(M)
         w_star_first = np.dot(phi.T, phi) + l * I
         w_star_second = phi.T @ y  # np.dot(phi.T, y)
         w_star = qr_inv(w_star_first, w_star_second)
@@ -117,7 +107,7 @@ def task12():
         return w_star
 
     def predict(x, w):
-        y_hat = x.T @ w
+        y_hat = x @ w
         return y_hat
 
     def mse(N, y, y_hat):
@@ -136,18 +126,19 @@ def task12():
 
         x_test = generate_x(N_test, d=d)
         y_test = generate_y(x_test, sigma=sigma)
-        return x_train, y_train, x_test, y_test
+        return x_train.T, y_train, x_test.T, y_test
 
     def calc_train_and_test_mse(x_train, y_train, x_test, y_test, M):
         # %%
         v = generate_v(M, d)
-        phi = generate_phi(x_train, v, M)
+        phi = calc_phi(x_train, v, M)
+        phi_test = calc_phi(x_test, v, M)
         w_star = calc_w(y=y_train, l=1e-8, phi=phi)
-        mse_train = mse(N_train, y_train, predict(x_train, w_star))
-        mse_test = mse(N_test, y_test, predict(x_test, w_star))
+        mse_train = mse(N_train, y_train, predict(phi, w_star))
+        mse_test = mse(N_test, y_test, predict(phi_test, w_star))
         return mse_train, mse_test
 
-    M_7 = [10 * k + 1 for k in range(0, 60)]
+    M_7 =  [10 * k + 1 for k in range(0, 60)]
 
     avg_train_loss = []
     avg_test_loss = []
