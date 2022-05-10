@@ -128,14 +128,12 @@ def task12():
 
         v = generate_v(M, d)
 
-        phi_train = generate_phi(x_train, v, M)
-        phi_test = generate_phi(x_test, v, M)
+        phi = generate_phi(x_train, v, M)
 
-        w_star_train = calc_w(y=y_train, l=1e-8, phi=phi_train)
-        w_star_test = calc_w(y=y_test, l = 1e-8, phi=phi_test)
+        w_star = calc_w(y=y_train, l=1e-8, phi=phi)
 
-        mse_train = mse(N_train, y_train, predict(x_train, w_star_train))
-        mse_test = mse(N_test, y_test, predict(x_test, w_star_test))
+        mse_train = mse(N_train, y_train, predict(x_train, w_star))
+        mse_test = mse(N_test, y_test, predict(x_test, w_star))
 
         return mse_train, mse_test
 
