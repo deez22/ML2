@@ -138,9 +138,7 @@ def task12():
         mse_test = mse(N_test, y_test, predict(phi_test, w_star))
         return mse_train, mse_test
 
-    M_7 =  [10 * k + 1 for k in range(0, 60)]
-
-
+    M_7 = [10 * k + 1 for k in range(0, 60)]
 
     x_train, y_train, x_test, y_test = train_test_data(N_train, N_test, d, sigma)
 
@@ -164,13 +162,16 @@ def task12():
 
         print("Average train loss = " + str(avg_train_loss))
         print("Average test loss = " + str(avg_test_loss))
-        ax1[axis_iterator].plot(avg_train_loss)
+        train_err, = ax1[axis_iterator].plot(avg_train_loss)
         ax1[axis_iterator].fill_between(np.linspace(0,59,60), np.array(avg_train_loss) - np.array(std_train_loss)
                                         , np.array(avg_train_loss) + np.array(std_train_loss),alpha=0.2)
 
-        ax1[axis_iterator].plot(avg_test_loss)
+        test_err, = ax1[axis_iterator].plot(avg_test_loss)
         ax1[axis_iterator].fill_between(np.linspace(0,59,60), np.array(avg_test_loss) - np.array(std_test_loss)
                                         , np.array(avg_test_loss) + np.array(std_test_loss),alpha=0.2)
+
+        ax1[axis_iterator].set_title("Lambda = " + str(lamb))
+        ax1[axis_iterator].legend(handles = [train_err, test_err], labels = ['train_error', 'test_error'])
         axis_iterator += 1
 
     plt.show()
