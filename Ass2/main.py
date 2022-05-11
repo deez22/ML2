@@ -140,6 +140,8 @@ def task12():
 
     M_7 = [10 * k + 1 for k in range(0, 60)]
 
+
+
     x_train, y_train, x_test, y_test = train_test_data(N_train, N_test, d, sigma)
 
     axis_iterator = 0
@@ -174,6 +176,63 @@ def task12():
         ax1[axis_iterator].legend(handles = [train_err, test_err], labels = ['train_error', 'test_error'])
         axis_iterator += 1
 
+
+
+    # Task 2
+
+    def calc_theta(x, x_slash):
+        term_1 = x.T @ x_slash
+        term_2 = np.linalg.norm(x, axis=-1) @ np.linalg.norm(x_slash, axis=-1)
+        return np.arccos(term_1/term_2)
+
+    def calulate_kernel_matrix(x, x_slash):
+        term_1 = 1/(2*np.pi*d)
+        term_2 = np.linalg.norm(x, axis=-1) @ np.linalg.norm(x_slash, axis=-1)
+        theta = calc_theta(x, x_slash)
+        term_3 = np.sin(theta) + (np.pi - theta) * np.cos(theta)
+        return term_1 * term_2 * term_3
+
+    def calculate_a_star(y, lamb, K=None):
+        I = np.identity(len(K))
+        term_1 = (-(K+lamb*I))
+        a_star = qr_inv(term_1, lamb*y)
+        return a_star
+
+    def predict_kernel(a, kernel, lamb):
+        #weights = -(1/lamb)*(phi_1.T@a)
+        #weights = (phi_train.T@a)
+        #term_1 = a.T @ phi_1
+
+        return (a.T * kernel).T
+
+
+
+    def calc_train_and_test_mse_kernel(x_train, y_train, x_test, y_test, M, lamb):
+        kernel = calulate_kernel_matrix(x_train.T, x_train.T)
+        kernel2 = calulate_kernel_matrix(x_test.T, x_train.T)
+        a_star_1 = calculate_a_star(y=y_train, lamb=lamb, K=kernel)
+        v = generate_v(M, d)
+        #phi = calc_phi(x_train, v, M)
+        #phi_test = calc_phi(x_test, v, M)
+
+        #y_hat_1 = y_hat(kernel, kernel, lamb, y_train)
+        #y_hat_2 = y_hat(kernel, kernel2, lamb, y_train)
+        mse_train = mse(N_train, y_train, predict_kernel(a_star_1, kernel, lamb))
+        mse_test = mse(N_test, y_test, predict_kernel(a_star_1, kernel2, lamb))
+        return mse_train, mse_test
+
+
+    avg_train_loss = []
+    std_train_loss = []
+    avg_test_loss = []
+    std_test_loss = []
+    axis_iterator = 0
+    train_loss, test_loss = calc_train_and_test_mse_kernel(x_train, y_train, x_test, y_test, M, lams[0])
+
+    ax1[axis_iterator].plot(train_loss)
+    ax1[axis_iterator].plot(test_loss)
+
+    axis_iterator += 1
     plt.show()
     print("hi")
 
