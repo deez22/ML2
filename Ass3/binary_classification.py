@@ -239,7 +239,7 @@ def svm_primal():
 
     data_a_train, data_a_test, _ ,_ = load_data()
 
-    alpha = 10e-2
+    alpha = 4e-3
     lamb = 0.005
     nr_weights = 3
     w = np.zeros(nr_weights)
@@ -258,7 +258,7 @@ def svm_primal():
     print(calc_grad)
 
     hinge_loss = []
-    for i in range(350):
+    for i in range(250):
         w_tilde = w_tilde - alpha * calc_g(w_tilde, x_train, y_train)
         w_tilde = w_tilde / (1 + lamb*alpha)
 
@@ -280,7 +280,14 @@ def svm_primal():
     test_acc = calcuate_accuracy(y_test, test_pred)
 
     print("Train accuarcy: " + str(train_acc) + "Test accuarcy: " + str(test_acc))
+    ax[1].scatter(x_test[y_test == 1][:, 1],
+                  x_test[y_test == 1][:, 2], color='orange', label='True')
+    ax[1].scatter(x_test[y_test == -1][:, 1], x_test[y_test == -1][:, 2], color='blue', label='False')
 
+    ax[2].scatter(x_test[np.array(test_pred) == 1][:, 1],
+                  x_test[np.array(test_pred) == 1][:, 2], color='orange', label='True')
+    ax[2].scatter(x_test[np.array(test_pred) == -1][:, 1],
+                  x_test[np.array(test_pred) == -1][:, 2], color='blue', label='False')
 
     plt.show()
     """ End of your code
