@@ -116,6 +116,81 @@ def logistic():
     """ Start of your code 
     """
 
+    #1.
+    a_train, a_test, _, _ = load_data()
+    x_train = a_train[:, :3]
+    x_test = a_test[:, :3]
+    y_train = np.squeeze(a_train[:, 3:])
+    y_test = np.squeeze(a_test[:, 3:])
+
+    w_tilde = np.random.randn(3)
+    epsilon = 1.49e-08
+
+
+    def error_function(w_tilde, x, y):
+        exponential_term = np.exp(-y * (w_tilde @ x.T))
+        term_1 = np.log(1+exponential_term)
+        return np.sum(term_1)
+    approximation = approx_fprime(w_tilde, error_function, epsilon, *[x_train, y_train])
+    print(f'Approximation: {approximation}')
+
+    def gradient(w_tilde,x,y):
+        exp_term = np.exp(-y * (x @ w_tilde))
+        term_1 = 1 / (1+exp_term)
+        term_2 = term_1 * exp_term
+        term_3 = np.sum(term_2.reshape(term_2.shape[0],1)*(-y.reshape(y.shape[0],1)*x), axis=0)
+        return term_3
+
+    grad = gradient(w_tilde, x_train, y_train)
+    print(f'Gradient: {grad}')
+
+    # 2.
+    def calc_lipschitz(x):
+        sum_term = x @ x.T
+        sigma, _ = np.linalg.eigh(sum_term)
+        return (1/4) * np.max(sigma)
+
+    L = calc_lipschitz(x_train)
+
+
+    loss_values = []
+    old_loss = 100000
+    latest_loss = 0
+    k = 1
+    w_tilde_previous, next_w = np.zeros_like(w_tilde), np.zeros_like(w_tilde)
+    while abs(old_loss - latest_loss) > 0.001:
+        old_loss = latest_loss
+        beta = (k-1) / (k+1)
+        w_slash = w_tilde + beta*(w_tilde - w_tilde_previous)
+        w_tilde_previous = w_tilde
+        next_w = w_slash - (1/L)*gradient(w_slash, x_train, y_train)
+        w_tilde = next_w
+        latest_loss = error_function(next_w, x_train, y_train)
+        loss_values.append(latest_loss)
+
+    sigma = lambda x: 1 / (1 + np.exp(-x))
+
+    train_predictions = [1 if sigma(i) > 0.5 else -1 for i in (x_train @ next_w)]
+    test_predictions = [1 if sigma(i) > 0.5 else -1 for i in (x_test @ next_w)]
+
+    accuracy_train = np.mean([y_train == train_predictions])
+    accuracy_test = np.mean([y_test == test_predictions])
+
+
+    print(f'Train Accuracy: {accuracy_train}')
+    print(f'Test Accuracy: {accuracy_test}')
+
+    #3.
+    ax[0].plot(loss_values)
+
+    ax[1].scatter(x_test[y_test == 1][:, 1],
+                  x_test[y_test == 1][:, 2], color='orange', label='True')
+    ax[1].scatter(x_test[y_test == -1][:, 1], x_test[y_test == -1][:, 2], color='blue', label='False')
+
+    ax[2].scatter(x_test[np.array(test_predictions) == 1][:, 1],
+                  x_test[np.array(test_predictions) == 1][:, 2], color='orange', label='True')
+    ax[2].scatter(x_test[np.array(test_predictions) == -1][:, 1],
+                  x_test[np.array(test_predictions) == -1][:, 2], color='blue', label='False')
 
     """ End of your code
     """
