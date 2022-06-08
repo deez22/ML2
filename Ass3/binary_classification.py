@@ -220,6 +220,69 @@ def svm_primal():
     """ Start of your code 
     """
 
+    def nine(w, lamb, x_train, y_train):
+        first = (lamb/2) * np.linalg.norm(w)
+        sum = np.maximum(0, 1 - (y_train * (x_train @ w)))
+
+        return first + np.mean(sum)
+
+
+    def calc_g(w, x_train, y_train):
+        assert len(x_train) == len(y_train), 'both must be of size n'
+        g = -np.expand_dims(y_train, axis=-1) * x_train
+        cond = y_train * (x_train @ w) >= 1
+
+        g[cond] = 0
+
+        return np.mean(g, axis=0)
+
+
+    data_a_train, data_a_test, _ ,_ = load_data()
+
+    alpha = 10e-2
+    lamb = 0.005
+    nr_weights = 3
+    w = np.zeros(nr_weights)
+    w_tilde = w
+    x_train = data_a_train[:, :-1]
+    y_train = data_a_train[:, -1]
+    x_test = data_a_test[:, :-1]
+    y_test = data_a_test[:, -1]
+
+
+    approx_grad = approx_fprime(w, nine, np.sqrt(np.finfo(float).eps), 0, x_train, y_train)
+
+    calc_grad = calc_g(w, x_train, y_train)
+
+    print(approx_grad)
+    print(calc_grad)
+
+    hinge_loss = []
+    for i in range(350):
+        w_tilde = w_tilde - alpha * calc_g(w_tilde, x_train, y_train)
+        w_tilde = w_tilde / (1 + lamb*alpha)
+
+        hinge_loss.append(nine(w=w_tilde, lamb=lamb, x_train=x_train, y_train=y_train))
+
+    print(w_tilde)
+
+    ax[0].plot(hinge_loss)
+
+    train_pred = np.sign(x_train @ w_tilde)
+    test_pred = np.sign(x_test @ w_tilde)
+
+    print(np.sign(x_train @ w_tilde))
+
+    def calcuate_accuracy(y, y_pred):
+        return np.mean(y == y_pred)
+
+    train_acc = calcuate_accuracy(y_train, train_pred)
+    test_acc = calcuate_accuracy(y_test, test_pred)
+
+    print("Train accuarcy: " + str(train_acc) + "Test accuarcy: " + str(test_acc))
+
+
+    plt.show()
     """ End of your code
     """
 
