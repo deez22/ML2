@@ -126,15 +126,28 @@ def svm_primal():
             term_3 = np.array([x_n]).T
             term_1 = (y_n * (w_tilde @ term_3))
             if term_1 >= 1:
-                g.append(0)
+                g.append(np.zeros_like(np.array(x_n).T))
             else:
-                term_2 = -y_n * np.array([1, x_n]).T
+                term_2 = -y_n * np.array(x_n).T
                 g.append(term_2)
-        return 1/len(g) * np.sum(g)
+        #return 1/len(g) * np.sum(g)
+        return [(1/len(i) * np.sum(i)) for i in np.array(g).T]
+
+    def proximal_sub_gradient(w_tilde, array_of_y, array_of_x, alpha, lamb_of_god):
+        w_tilde_next = np.zeros_like(w_tilde)
+        convergence_diff = 1e-3
+        while np.abs(np.sum(w_tilde_next) - np.sum(w_tilde)) > convergence_diff:
+            w_tilde_i = w_tilde_next
+            w_tilde_next = w_tilde - alpha * np.array(calc_g(array_of_y, array_of_x, w_tilde))
+            w_tilde_next = w_tilde_next/(1+lamb_of_god * alpha)
+            w_tilde = w_tilde_i
+
+        return w_tilde_next
 
 
     data_a_train, data_a_test, _ ,_ = load_data()
-    alpha = 0.01
+    alpha = 0.2
+    lamb = 1e-4
     nr_weights = 3
     w = np.zeros(nr_weights)
     b = np.full(w.shape,0.5)
@@ -143,7 +156,9 @@ def svm_primal():
     array_of_x = data_a_train[:,:3]
     array_of_y = data_a_train[:,3:]
 
-    calc_g(array_of_y, array_of_x, w_tilde)
+    zzzzup = proximal_sub_gradient(w_tilde, array_of_y,
+                                   array_of_x, alpha, lamb)
+    zzzzup_approx = approx_fprime([0,0], proximal_sub_gradient,  1.49e-08 ,[w_tilde, array_of_y, array_of_x, alpha, lamb])
 
 
     """ End of your code
