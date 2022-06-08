@@ -124,7 +124,7 @@ def svm_primal():
         g = []
         for y_n, x_n in zip(array_of_y, array_of_x):
             term_3 = np.array([x_n]).T
-            term_1 = (y_n * (w_tilde * term_3))
+            term_1 = (y_n * (w_tilde @ term_3))
             if term_1 >= 1:
                 g.append(0)
             else:
@@ -135,7 +135,7 @@ def svm_primal():
 
     data_a_train, data_a_test, _ ,_ = load_data()
     alpha = 0.01
-    nr_weights = 5
+    nr_weights = 3
     w = np.zeros(nr_weights)
     b = np.full(w.shape,0.5)
     #w_tilde = np.vstack((b,w)).T
