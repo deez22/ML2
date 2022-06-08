@@ -43,6 +43,16 @@ def load_data():
 
     return data_a_train, data_a_test, data_b_train, data_b_test
 
+
+def qr_inv(A, b):
+    Q,R = np.linalg.qr(A)
+    z = Q.T@b
+    return np.linalg.solve(R,z)
+
+
+def plot(ax, x, y):
+    ax.scatter(x[y == -1][:, 1], x[y == -1][:, 2], color='r', label='false')
+    ax.scatter(x[y == 1][:, 1], x[y == 1][:, 2], color='b', label='true')
     
 def quadratic():
     """ Subtask 1: Quadratic Loss as Convex Surrogate in Binary Classification
@@ -60,7 +70,26 @@ def quadratic():
     """ Start of your code 
     """
 
+    a_train, a_test, _, _ = load_data()
+    x_train = a_train[:, :3]
+    x_test = a_test[:, :3]
+    y_train = np.squeeze(a_train[:, 3:])
+    y_test = np.squeeze(a_test[:, 3:])
 
+    w = qr_inv(x_train.T @ x_train, x_train.T @ y_train)
+
+    train_prediction, test_prediction = np.sign(x_train @ w), np.sign(x_test @ w)
+    accuracy_train = np.mean([True if y_train[i] == train_prediction[i] else False for i in range(0,train_prediction.shape[0])])
+    accuracy_test = np.mean([True if y_test[i] == test_prediction[i] else False for i in range(0,test_prediction.shape[0])])
+
+    ax[0].scatter(x_test[y_test == 1][:, 1], x_test[y_test == 1][:, 2], color='orange', label='True')
+    ax[0].scatter(x_test[y_test == -1][:, 1], x_test[y_test == -1][:, 2], color='blue', label='False')
+
+    ax[1].scatter(x_test[test_prediction == 1][:, 1], x_test[test_prediction == 1][:, 2], color='orange', label='True')
+    ax[1].scatter(x_test[test_prediction == -1][:, 1], x_test[test_prediction == -1][:, 2], color='blue', label='False')
+
+    print(f'Train Accuracy: {accuracy_train}')
+    print(f'Test Accuracy: {accuracy_test}')
     """ End of your code
     """
 
@@ -115,51 +144,6 @@ def svm_primal():
 
     """ Start of your code 
     """
-
-    def calc_g(array_of_y, array_of_x, w_tilde ):
-        #(10.)
-        # FYI: phi(xn) is not needed because this is already done due to
-        # homogeneous coords
-        assert len(array_of_x) == len(array_of_y), 'both must be of size n'
-        g = []
-        for y_n, x_n in zip(array_of_y, array_of_x):
-            term_3 = np.array([x_n]).T
-            term_1 = (y_n * (w_tilde @ term_3))
-            if term_1 >= 1:
-                g.append(np.zeros_like(np.array(x_n).T))
-            else:
-                term_2 = -y_n * np.array(x_n).T
-                g.append(term_2)
-        #return 1/len(g) * np.sum(g)
-        return [(1/len(i) * np.sum(i)) for i in np.array(g).T]
-
-    def proximal_sub_gradient(w_tilde, array_of_y, array_of_x, alpha, lamb_of_god):
-        w_tilde_next = np.zeros_like(w_tilde)
-        convergence_diff = 1e-3
-        while np.abs(np.sum(w_tilde_next) - np.sum(w_tilde)) > convergence_diff:
-            w_tilde_i = w_tilde_next
-            w_tilde_next = w_tilde - alpha * np.array(calc_g(array_of_y, array_of_x, w_tilde))
-            w_tilde_next = w_tilde_next/(1+lamb_of_god * alpha)
-            w_tilde = w_tilde_i
-
-        return w_tilde_next
-
-
-    data_a_train, data_a_test, _ ,_ = load_data()
-    alpha = 0.2
-    lamb = 1e-4
-    nr_weights = 3
-    w = np.zeros(nr_weights)
-    b = np.full(w.shape,0.5)
-    #w_tilde = np.vstack((b,w)).T
-    w_tilde = b
-    array_of_x = data_a_train[:,:3]
-    array_of_y = data_a_train[:,3:]
-
-    zzzzup = proximal_sub_gradient(w_tilde, array_of_y,
-                                   array_of_x, alpha, lamb)
-    zzzzup_approx = approx_fprime([0,0], proximal_sub_gradient,  1.49e-08 ,[w_tilde, array_of_y, array_of_x, alpha, lamb])
-
 
     """ End of your code
     """
